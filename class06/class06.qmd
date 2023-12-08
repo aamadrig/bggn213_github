@@ -1,0 +1,174 @@
+---
+title: "class06"
+author: "Assael Madrigal (PID: A10179083)"
+format: pdf
+---
+
+## Functions in R
+
+Every function needs 3 things: name, arguments and body
+
+The function of today is to grade a class of student assigment scores. **all students get to drop 1 of their lowest score**
+
+But first I am going to work with a vector and make sure i know how it works because i know what the answer is.
+
+as a side note, to have Quarto render a new line we need to give the line 2 spaces. 
+
+```{r}
+student1 <- c(100, 100, 100, 100, 100, 100, 100, 90)
+student2 <- c(100, NA, 90, 90, 90, 90, 97, 80)
+student3 <- c(90, NA, NA, NA, NA, NA, NA, NA)
+```
+
+to calculate average: mean() 
+```{r}
+mean(student1)
+mean(student2)
+mean(student3)
+```
+
+the function `which` can be used with `min()` to return the position where the lowest value is `which.min()`
+```{r}
+which.min(student1)
+student1[8]
+```
+We can use the `-` inside to return everything except what is inside
+```{r}
+student1[-8]
+```
+
+We can put together to find the mean of student1 dropping their lowest score
+```{r}
+mean(student1[-(which.min(student1))])
+```
+
+Will this work for student 2? No because it has an NA
+```{r}
+mean(student2[-(which.min(student2))])
+```
+
+To switch i can assign x to variable to make it easier
+```{r}
+x <- student1
+mean( x[-which.min(x)])
+```
+
+One idea is to "mask" the NA and change them to be 0. So if you don't do HW you get 0 points.
+The `is.na()` returns a logical for every position
+The `replace()` takes 3 arguments
+   1. the vector
+   2. the condition
+   3. what to replace it with
+```{r}
+x <- student3
+replace(x, is.na(x), 0)
+```
+
+The long way to do it is to get the vector of na first, then assign each element to 0
+```{r}
+x<-student3
+is.na(x)
+x[ is.na(x)] <- 0
+x
+```
+
+So then we can combine this with the code that removes the smallest value before calculating the mean. 
+And we get our functional code
+```{r}
+x<-student2
+#Mask NA with 0
+x[ is.na(x)] <- 0
+#drop the lowest value and find the average
+mean(x[-(which.min(x))])
+```
+
+###Question 1
+Let's turn it into a function
+```{r}
+grade <- function(x){
+  #Mask NA with 0
+  x[ is.na(x)] <- 0
+  #drop the lowest value and find the average
+  mean(x[-(which.min(x))])
+}
+```
+Now that it is loaded i can use it to confirm my function works
+```{r}
+grade(student1)
+```
+
+Next I want to read a csv 
+```{r}
+gradebook <- read.csv("https://tinyurl.com/gradeinput")
+gradebook
+```
+but i don't want x in my column so i use row.names=1 to read in the code from the 1st row instead of the 0th. So it made its own rows but i want it to use the first column as the name for the rows.
+```{r}
+gradebook <- read.csv("https://tinyurl.com/gradeinput", row.names = 1)
+gradebook
+```
+
+the `apply()` function is really important to learn
+```{r}
+?apply()
+```
+
+
+We can `apply` the grade function to the gradebook.
+I need the array, the margin, and the function to be applied. So i need to find the margins i want 
+```{r}
+ans<-apply(gradebook, 1,grade)
+ans
+```
+
+##Question 2
+To find the student that scored the highest. I can just ask it to find the max value and which student it corresponded to
+```{r}
+which.max(ans)
+```
+
+##Question 3
+To find the toughest homework i can find the average of the columns instead of the rows. But i should not do grade() because i dont want it to drop it. Then find which was the lowest from the ones that got turned in
+
+```{r}
+ans3 <-apply(gradebook, 2,mean, na.rm=TRUE)
+which.min(ans3)
+ans3
+```
+
+Let's see if we mask the NA with 0 if that will change teh answer
+```{r}
+mask <- gradebook
+mask[is.na(mask)] <- 0
+mask
+```
+```{r}
+ans3<-apply(gradebook, 1,grade)
+ans3
+```
+
+lets see what happens if we use the sum
+```{r}
+which.min(apply(mask,2,sum))
+```
+
+##Quesion 4 From your analysis of the gradebook, which homework was most predictive of overall score
+
+We can use Pearson's correlation using the `corr` function
+```{r}
+mask <- gradebook
+mask[is.na(mask)] <- 0
+mask
+
+ans1<-apply(mask, 1,grade)
+ans1
+cor(mask$hw1,ans1)
+cor(mask$hw2,ans1)
+```
+
+We can try to apply the function with cor, to do this we have to include the arguments for cor in the `...` section
+```{r}
+apply(mask,2,cor, y=ans)
+```
+
+So hw 5 is the most predictive
