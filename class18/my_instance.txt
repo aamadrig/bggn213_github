@@ -1,0 +1,3 @@
+My AWS instance
+
+aws='ubuntu@ec2-35-92-231-177.us-west-2.compute.amazonaws.com'

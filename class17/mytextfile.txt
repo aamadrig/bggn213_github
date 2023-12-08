@@ -1,0 +1,6 @@
+
+This is just a basic text editor.
+
+ubuntu@ec2-35-86-104-47.us-west-2.compute.amazonaws.com
+
+
